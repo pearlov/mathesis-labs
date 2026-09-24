@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Pembelajaran - Fungsi Invers</title>
+    
+    <!-- Import Google Fonts & Canvas Confetti & Mermaid Library -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' }); // Matikan startOnLoad agar tidak bentrok dengan display: none pada tab
+    </script>
+    
+    <style>
+        :root {
+            --primary: #0369a1;
+            --primary-hover: #0284c7;
+            --accent: #06b6d4;
+            --bg-main: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.85); 
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        h1, h2, h3 { font-family: 'Poppins', sans-serif; }
+
+        @keyframes moveBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('background.jpg'); 
+            background-size: 150% 150%; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            background-attachment: fixed; 
+            animation: moveBackground 25s ease infinite;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9999;
+        }
+
+        @keyframes universeGlow {
+            0% { background-position: 0% 50%; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3); }
+            50% { background-position: 100% 50%; box-shadow: 0 6px 25px rgba(14, 165, 233, 0.6); }
+            100% { background-position: 0% 50%; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3); }
+        }
+
+        header {
+            background: linear-gradient(135deg, #0369a1, #0ea5e9, #06b6d4, #1e1b4b);
+            background-size: 300% 300%;
+            color: white;
+            padding: 1rem 2rem;
+            animation: universeGlow 8s ease infinite;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.15;
+            animation: starMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes starMove {
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(50px) translateX(50px); }
+        }
+
+        .logo-area h1 { font-size: 1.35rem; font-weight: 700; position: relative; z-index: 2; }
+        .logo-area p { font-size: 0.8rem; opacity: 0.9; position: relative; z-index: 2; }
+
+        nav {
+            display: flex; gap: 0.4rem; background: rgba(255, 255, 255, 0.15);
+            padding: 0.35rem; border-radius: 9999px; backdrop-filter: blur(5px);
+            position: relative; z-index: 2;
+        }
+
+        nav button {
+            background: transparent; border: none; color: white;
+            padding: 0.45rem 0.9rem; border-radius: 9999px; font-size: 0.8rem;
+            font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+        }
+
+        nav button.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: 600; }
+
+        main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 2rem; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease forwards; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--border);
+            border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 1.5rem;
+        }
+
+        .card h2 { font-size: 1.35rem; color: var(--primary); margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        .card p, .feature-box p { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; margin-bottom: 0.6rem; text-align: justify; }
+        .card li, .feature-box li { font-size: 0.95rem; color: var(--text-main); line-height: 1.5; margin-bottom: 0.2rem; text-align: justify; }
+        
+        i { font-family: 'Cambria Math', 'Times New Roman', serif; font-style: italic; } 
+        
+        .math-box { 
+            background: #f1f5f9; padding: 1.5rem; border-left: 5px solid var(--primary); border-radius: 0.5rem; 
+            font-family: 'Cambria Math', 'Times New Roman', serif; font-size: 1.15rem; font-weight: 600; margin: 1rem 0; 
+            color: var(--text-main); overflow-x: auto;
+        }
+
+        /* Styling Matematika untuk Pecahan */
+        .frac {
+            display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+            vertical-align: middle; margin: 0 4px; font-size: 0.9em;
+            font-family: 'Cambria Math', 'Times New Roman', serif; line-height: 1.1;
+        }
+        .frac .top { border-bottom: 1.5px solid currentColor; padding: 0 4px; }
+        .frac .bot { padding: 0 4px; }
+
+        .sim-grid { display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; }
+        @media (max-width: 900px) { .sim-grid { grid-template-columns: 1fr; } }
+        .sim-panel { background: var(--card-bg); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
+        .sim-panel h3 { font-size: 1.1rem; color: var(--primary); }
+        
+        .func-mode-nav { display: flex; gap: 0.4rem; background: #e2e8f0; padding: 0.3rem; border-radius: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+        .func-mode-btn { flex: 1; min-width: 90px; background: transparent; border: none; padding: 0.4rem 0.2rem; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); border-radius: 0.35rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .func-mode-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .control-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .control-group label { font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.2rem; }
+        .slider-label { display: flex !important; justify-content: space-between; } 
+
+        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+        .canvas-container { width: 100%; background: #ffffff; border-radius: 0.75rem; border: 1px solid var(--border); overflow: hidden; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        canvas:not(#confetti-canvas) { width: 100%; max-width: 500px; display: block; }
+        
+        .hero { text-align: center; padding: 3rem 1.5rem; background: rgba(255, 255, 255, 0.90); backdrop-filter: blur(8px); border-radius: 1rem; border: 1px solid var(--border); }
+        .btn-primary { background: var(--primary); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .feature-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; }
+        .legend { display: flex; gap: 1rem; font-size: 0.85rem; font-weight: 500; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+        .legend span { display: flex; align-items: center; gap: 0.4rem; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+
+        .sub-nav { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap; }
+        .sub-nav-btn { background: rgba(255, 255, 255, 0.6); border: 2px solid var(--border); padding: 0.5rem 1rem; border-radius: 9999px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text-main); transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .sub-nav-btn:hover { border-color: var(--primary); }
+        .sub-nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sub-tab-content { display: none; animation: fadeIn 0.4s ease forwards; }
+        .sub-tab-content.active { display: block; }
+
+        /* Game 2: Drag Drop */
+        .game-container { background: var(--card-bg); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; text-align: center; color: var(--text-main); margin: 0 auto; max-width: 950px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .level-nav { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .level-btn { background: #e2e8f0; border: none; padding: 0.5rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+        .level-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .cards-wrapper { display: flex; justify-content: space-around; flex-wrap: wrap; margin-bottom: 20px; gap: 10px; }
+        .drag-card, .drop-zone { 
+            width: 260px; min-height: 80px; padding: 10px; display: flex; align-items: center; justify-content: center; 
+            border-radius: 8px; font-weight: bold; transition: all 0.3s ease; text-align: center;
+            font-family: 'Cambria Math', 'Times New Roman', serif; font-size: 1.1rem;
+        }
+        .drag-card { background: var(--primary); color: white; cursor: grab; user-select: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .drop-zone { background: rgba(0, 0, 0, 0.05); border: 2px dashed var(--primary); color: var(--text-main); }
+        .drop-zone.correct { background: var(--success); border-color: var(--success); color: white; }
+        .game-message { font-size: 1.15em; font-weight: bold; min-height: 30px; margin-top: 15px; font-family: 'Outfit', sans-serif; }
+        
+        .congrats-banner {
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: white; padding: 1.2rem; border-radius: 0.75rem; margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: none;
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Game 3: Kriptografi */
+        .crypto-container { background: rgba(15, 25, 35, 0.90); backdrop-filter: blur(10px); padding: 25px; border-radius: 12px; text-align: center; color: #e0e0e0; font-family: 'Courier New', Courier, monospace; margin: 0 auto; max-width: 800px; border: 1px solid #4caf50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.2); }
+        .crypto-header { color: #4caf50; font-size: 1.5em; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .mission-text { font-family: 'Outfit', sans-serif; font-size: 1.1em; margin-bottom: 20px; line-height: 1.5; }
+        .terminal-box { background: #000; color: #0f0; padding: 15px; border-radius: 6px; font-size: 1.5em; letter-spacing: 5px; margin-bottom: 20px; min-height: 40px; border: 1px solid #333; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .letter-box { display: inline-block; min-width: 30px; text-align: center; }
+        .options-container { display: flex; justify-content: center; align-items: stretch; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        
+        .btn-option { 
+            background: #2b2b2b; color: white; border: 1px solid #555; padding: 10px 20px; 
+            border-radius: 6px; cursor: pointer; font-size: 1.2em; transition: all 0.3s; 
+            display: inline-flex; align-items: center; justify-content: center;
+            font-family: 'Cambria Math', 'Times New Roman', serif; font-weight: bold;
+        }
+        .btn-option:hover { background: #4caf50; border-color: #4caf50; color: #000; }
+
+        /* Game 4: Time Machine Chef */
+        .chef-container {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.95));
+            backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; text-align: center;
+            color: #fff; max-width: 800px; margin: 0 auto; border: 1px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.2);
+        }
+        .chef-screen {
+            background: #0f172a; border: 2px solid var(--accent); border-radius: 8px; padding: 20px;
+            margin-bottom: 20px; font-family: 'Outfit', sans-serif;
+        }
+        .oven-display {
+            font-size: 2.2rem; font-weight: 700; color: #38bdf8; margin: 10px 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        .chef-input {
+            padding: 10px 15px; font-size: 1.2rem; border-radius: 6px; border: 1px solid var(--border);
+            width: 150px; text-align: center; font-weight: bold;
+        }
+
+        /* Game 5: Kartu Soal Kontekstual Suhu */
+        .temp-deck {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .temp-card-item {
+            background: linear-gradient(135deg, #0369a1, #0ea5e9); color: white; border-radius: 12px; padding: 1.5rem 1rem;
+            text-align: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(3, 105, 161, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .temp-card-item:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(3, 105, 161, 0.5); background: linear-gradient(135deg, #0284c7, #06b6d4); }
+        .temp-card-item h3 { font-size: 1.1rem; margin-bottom: 0.3rem; font-family: 'Poppins', sans-serif; }
+        .temp-card-item p { font-size: 0.8rem; opacity: 0.9; margin: 0; }
+
+        footer {
+            background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(8px); color: #94a3b8;
+            text-align: center; padding: 1rem; font-size: 0.85rem; margin-top: auto; border-top: 1px solid var(--border);
+        }
+        footer span { color: #e2e8f0; font-weight: 600; }
+
+        /* Style Tambahan untuk Tombol Back to Top */
+        #backToTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        #backToTopBtn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Tombol Back to Top -->
+    <button id="backToTopBtn" title="Kembali ke atas">↑</button>
+
+    <header>
+        <div class="logo-area">
+            <h1> Mathesis Labs</h1>
+            <p>Media Pembelajaran Matematika • Kelas XI Fase F • Fungsi Invers </p>
+        </div>
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('home', this)">Home</button>
+            <button class="nav-btn" onclick="switchTab('cptp', this)">CP & TP</button>
+            <button class="nav-btn" onclick="switchTab('petakonsep', this)">Peta Konsep</button>
+            <button class="nav-btn" onclick="switchTab('materi', this)">Materi</button>
+            <button class="nav-btn" onclick="switchTab('simulator', this)">Simulator</button>
+            <button class="nav-btn" onclick="switchTab('evaluasi', this)">Evaluasi</button>
+            <button class="nav-btn" onclick="switchTab('profil', this)">Profil</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- TAB 1: HOME -->
+        <section id="tab-home" class="tab-content active">
+            <div class="hero">
+                <h2>Selamat Datang di Portal Belajar! </h2>
+		        <h3>- Fungsi Invers -</h3>
+                <p style="max-width: 700px; margin: 0 auto 1.5rem auto; color: var(--text-muted);">
+                    Pernahkah kamu membongkar sebuah mesin rakitan dan ingin mengembalikannya ke bentuk semula? Atau memakai sepatu dengan urutan kaus kaki lalu sepatu, dan saat melepasnya harus sepatu dulu baru kaus kaki? Itulah konsep dasar dari <strong>Invers (Kebalikan)</strong>.
+                </p>
+                <button class="btn-primary" onclick="switchTab('simulator', document.querySelectorAll('nav button')[4])">Mulai Eksplorasi & Game 🚀</button>
+            </div>
+            <div style="margin-top: 1.5rem;" class="grid-2">
+                <div class="card" style="margin: 0;">
+                    <h3>🎯 Mengapa Belajar Ini?</h3>
+                    <p>Fungsi invers sangat berguna di dunia nyata, seperti pada kriptografi (sandi rahasia), konversi suhu, kalkulasi resep kuliner penjelajah waktu, serta pemrograman komputer.</p>
+                </div>
+                <div class="card" style="margin: 0;">
+                    <h3>💡 Panduan Belajar</h3>
+                    <p>Gunakan menu navigasi di atas. Pelajari Peta Konsep dan Materi, lalu mainkan 5 mode game & kartu suhu interaktif yang tersedia di menu Simulator!</p>
+                </div> 
+            </div>
+        </section>
+
+        <!-- TAB 2: CP & TP -->
+        <section id="tab-cptp" class="tab-content">
+            <div class="card">
+                <h2>📋 Capaian & Tujuan Pembelajaran</h2>
+                <div class="grid-2">
+                    <div class="feature-box">
+                        <h3>Capaian Pembelajaran (CP)</h3>
+                        <p>Di akhir fase ini, peserta didik dapat memodelkan fenomena atau data dengan fungsi, serta menyelesaikan masalah yang berkaitan dengan <strong>fungsi invers</strong>.</p>
+                    </div>
+                    <div class="feature-box">
+                        <h3>Tujuan Pembelajaran (TP)</h3>
+                        <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                            <li>Memahami konsep dan syarat sebuah fungsi memiliki invers.</li>
+                            <li>Menentukan rumus fungsi invers dari suatu fungsi linear dan pecahan.</li>
+                            <li>Menyelesaikan masalah kontekstual berkaitan dengan fungsi invers.</li>
+                            <li>Menggambarkan grafik fungsi invers berdasarkan grafik aslinya.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: PETA KONSEP -->
+        <section id="tab-petakonsep" class="tab-content">
+            <div class="card">
+                <h2>🗺️ Peta Konsep </h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    Bagan grafik hierarkis ini memetakan alur materi Fungsi Invers secara visual, mulai dari konsep dasar hingga penerapan kontekstual di dunia nyata.
+                </p>
+
+                <!-- Container Diagram Grafik (Mermaid) -->
+                <div class="card" style="background: #ffffff; padding: 1.5rem; overflow-x: auto; text-align: center;">
+                    <div class="mermaid" id="conceptMapMermaid">
+                        graph TD
+                        classDef mainStyle fill:#0369a1,stroke:#0284c7,stroke-width:2px,color:#fff,font-weight:bold,rx:8,ry:8
+                        classDef branchStyle fill:#f0f9ff,stroke:#0369a1,stroke-width:2px,color:#1e293b,rx:6,ry:6
+                        classDef leafStyle fill:#ffffff,stroke:#e2e8f0,stroke-width:1px,color:#334155,rx:4,ry:4
+
+                        Root[" FUNGSI INVERS"]:::mainStyle
+
+                        Root --> B1["Konsep Dasar"]:::branchStyle
+                        B1 --> B1_1["Definisi"]:::leafStyle
+                        B1 --> B1_2["Syarat Fungsi"]:::leafStyle
+
+                        Root --> B2["Grafik Fungsi"]:::branchStyle
+                        B2 --> B2_1["Refleksi y = x"]:::leafStyle
+                        B2 --> B2_2["Transformasi Titik"]:::leafStyle
+
+                        Root --> B3["Rumus Fungsi"]:::branchStyle
+                        B3 --> B3_1[" f(x) → y → x = g(y) → f⁻¹(x)"]:::leafStyle
+
+                        Root --> B4["Contoh Fungsi"]:::branchStyle
+                        B4 --> B4_1["Konversi Suhu"]:::leafStyle
+                        B4 --> B4_2["Soal Kontekstual"]:::leafStyle
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MATERI (Dilengkapi Penjelasan Penuh & Quick Check) -->
+        <section id="tab-materi" class="tab-content">
+            <div class="card">
+                <h2>📚 Materi: Konsep Dasar Fungsi Invers</h2>
+                
+                <h3>1. Apa itu Fungsi Invers?</h3>
+                <p>Secara sederhana, fungsi invers adalah fungsi kebalikan. Jika fungsi <i>f</i> memetakan anggota himpunan A (Domain) ke himpunan B (Kodomain), maka fungsi inversnya (ditulis dengan simbol <strong><i>f⁻¹</i></strong>) akan memetakan anggota himpunan B kembali secara persis ke himpunan A.</p>
+                <div class="math-box">Jika <i>f(x)</i> = <i>y</i>, maka <i>f⁻¹(y)</i> = <i>x</i></div>
+                <p>Analogi di dunia nyata: Jika <i>f(x)</i> adalah proses "mengunci pintu dengan kunci", maka <i>f⁻¹(x)</i> adalah proses "membuka pintu dengan kunci yang sama".</p>
+
+                <h3 style="margin-top: 1.5rem;">2. Syarat Mutlak Sebuah Fungsi Memiliki Invers</h3>
+                <p>Sangat penting untuk diingat bahwa <strong>tidak semua fungsi memiliki invers</strong>. Sebuah fungsi <i>f(x)</i> hanya akan memiliki invers (dapat dibalikkan secara sempurna) jika dan hanya jika fungsi tersebut adalah <strong>fungsi bijektif</strong> (korespondensi satu-satu).</p>
+                <p>Fungsi bijektif berarti setiap anggota A tepat berpasangan dengan satu anggota B, dan tidak ada anggota B yang jomblo ataupun bercabang. Cara termudah mengujinya secara visual adalah menggunakan <em>Horizontal Line Test</em> (Uji Garis Horizontal) pada grafiknya.</p>
+
+                <h3 style="margin-top: 1.5rem;">3. Langkah Menentukan Rumus Fungsi Invers Aljabar</h3>
+                <ol style="padding-left: 1.5rem; margin-bottom: 1rem; line-height: 1.7;">
+                    <li>Ubah notasi fungsi <i>f(x)</i> menjadi variabel <i>y</i>. Persamaan menjadi <i>y</i> = <i>f(x)</i>.</li>
+                    <li>Lakukan manipulasi aljabar (pindah ruas, kali silang, akar/quadrat) sedemikian rupa agar persamaan berubah bentuk menjadi <strong><i>x</i> = ...</strong> (<i>x</i> sendirian di satu ruas).</li>
+                    <li>Setelah mendapat bentuk <i>x</i> = g(<i>y</i>), ubah variabel <i>x</i> menjadi notasi invers <strong><i>f⁻¹(x)</i></strong> dan ganti semua variabel <i>y</i> di ruas sebelahnya menjadi <strong><i>x</i></strong>.</li>
+                </ol>
+
+                <!-- FITUR BARU: QUICK CHECK INTERAKTIF -->
+                <div class="card" style="background: #e0f2fe; border: 1px solid var(--border); border-left: 5px solid var(--primary); margin-top: 2rem; padding: 1.5rem;">
+                    <h3 style="color: var(--primary); font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">⚡ Quick Check! Uji Pemahaman Kilat</h3>
+                    <p style="margin-bottom: 1rem; font-weight: 500;">Jika diketahui fungsi linear <i>f(x)</i> = 2<i>x</i> + 4, manakah di bawah ini yang merupakan rumus <i>f⁻¹(x)</i> yang benar?</p>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="qc-buttons">
+                        <button class="btn-option" style="background: #fff; color: var(--text-main); border: 2px solid var(--border); font-family: 'Cambria Math', serif;" onclick="checkQuickCheck(false, this)">
+                            <i>x</i> - 2
+                        </button>
+                        <button class="btn-option" style="background: #fff; color: var(--text-main); border: 2px solid var(--border); font-family: 'Cambria Math', serif;" onclick="checkQuickCheck(true, this)">
+                            <span class='frac'><span class='top'><i>x</i> - 4</span><span class='bot'>2</span></span>
+                        </button>
+                        <button class="btn-option" style="background: #fff; color: var(--text-main); border: 2px solid var(--border); font-family: 'Cambria Math', serif;" onclick="checkQuickCheck(false, this)">
+                            2<i>x</i> - 4
+                        </button>
+                    </div>
+                    
+                    <div id="qc-feedback" style="margin-top: 1rem; font-weight: 600; font-size: 1.05rem; min-height: 25px;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: SIMULATOR & GAMES -->
+        <section id="tab-simulator" class="tab-content">
+            
+            <div class="card" style="margin-bottom: 1.5rem; text-align: center; padding: 1.5rem;">
+                <h2 style="border: none; margin-bottom: 1rem; padding: 0;">Pilih Mode Simulator & Game Interaktif</h2>
+                <div class="sub-nav">
+                    <button class="sub-nav-btn active" onclick="switchSubTab('game1', this)">Game 1: Simulator Grafik</button>
+                    <button class="sub-nav-btn" onclick="switchSubTab('game2', this)">Game 2: Pasang Fungsi</button>
+                    <button class="sub-nav-btn" onclick="switchSubTab('game3', this)">Game 3: Agen Kriptografi</button>
+                    <button class="sub-nav-btn" onclick="switchSubTab('game4', this)">Game 4: Time Machine Chef </button>
+                    <button class="sub-nav-btn" onclick="switchSubTab('game5', this)">Game 5: Kartu Soal Suhu </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: GAME 1 -->
+            <div id="sub-game1" class="sub-tab-content active">
+                <div class="sim-grid">
+                    <div class="sim-panel">
+                        <h3>Eksplorasi Simulator Grafik</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Pilih jenis fungsi dan atur slider untuk melihat perubahan kurva serta rumus inversnya.</p>
+                        
+                        <div class="func-mode-nav">
+                            <button class="func-mode-btn active" id="btn-mode-linear" onclick="setFuncMode('linear')">Linear</button>
+                            <button class="func-mode-btn" id="btn-mode-rational" onclick="setFuncMode('rational')">Pecahan</button>
+                            <button class="func-mode-btn" id="btn-mode-sqrt" onclick="setFuncMode('sqrt')">Akar Kuadrat</button>
+                        </div>
+
+                        <div id="controls-linear" class="control-container">
+                            <div class="control-group">
+                                <label class="slider-label"><span>Gradien (<i>m</i>):</span> <span id="val-m">2.5</span></label>
+                                <input type="range" id="slider-m" min="-5" max="5" step="0.5" value="2.5">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.75rem;">
+                                <label class="slider-label"><span>Konstanta (<i>c</i>):</span> <span id="val-c">4</span></label>
+                                <input type="range" id="slider-c" min="-10" max="10" step="1" value="4">
+                            </div>
+                        </div>
+
+                        <div id="controls-rational" class="control-container" style="display:none;">
+                            <div class="control-group">
+                                <label class="slider-label"><span>Koefisien <i>a</i>:</span> <span id="val-ra">1</span></label>
+                                <input type="range" id="slider-ra" min="-5" max="5" step="1" value="1">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.5rem;">
+                                <label class="slider-label"><span>Koefisien <i>b</i>:</span> <span id="val-rb">2</span></label>
+                                <input type="range" id="slider-rb" min="-10" max="10" step="1" value="2">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.5rem;">
+                                <label class="slider-label"><span>Koefisien <i>c</i>:</span> <span id="val-rc">1</span></label>
+                                <input type="range" id="slider-rc" min="-5" max="5" step="1" value="1">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.5rem;">
+                                <label class="slider-label"><span>Koefisien <i>d</i>:</span> <span id="val-rd">-3</span></label>
+                                <input type="range" id="slider-rd" min="-10" max="10" step="1" value="-3">
+                            </div>
+                        </div>
+
+                        <div id="controls-sqrt" class="control-container" style="display:none;">
+                            <div class="control-group">
+                                <label class="slider-label"><span>Koefisien <i>a</i>:</span> <span id="val-sa">1</span></label>
+                                <input type="range" id="slider-sa" min="1" max="5" step="1" value="1">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.75rem;">
+                                <label class="slider-label"><span>Konstanta <i>b</i>:</span> <span id="val-sb">2</span></label>
+                                <input type="range" id="slider-sb" min="-5" max="5" step="1" value="2">
+                            </div>
+                            <div class="control-group" style="margin-top: 0.75rem;">
+                                <label class="slider-label"><span>Konstanta <i>c</i>:</span> <span id="val-sc">0</span></label>
+                                <input type="range" id="slider-sc" min="-5" max="5" step="1" value="0">
+                            </div>
+                        </div>
+    
+                        <div style="margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                            <h4 style="font-family: 'Poppins', sans-serif; color: var(--primary); margin-bottom: 0.4rem; font-size: 0.95rem;">Bentuk Persamaan:</h4>
+                            <div class="math-box" style="margin: 0; padding: 0.6rem; color: var(--primary); border-left-color: var(--primary);" id="eq-f"></div>
+                            <div class="math-box" style="margin: 0.4rem 0 0 0; padding: 0.6rem; color: #ef4444; border-left-color: #ef4444;" id="eq-inv"></div>
+                        </div>
+                    </div>
+    
+                    <div class="sim-panel">
+                        <h3>Visualisasi Grafik Simetris</h3>
+                        <div class="canvas-container">
+                            <canvas id="graphCanvas" width="500" height="500"></canvas>
+                        </div>
+                        <div class="legend">
+                            <span><div class="dot" style="background: var(--primary);"></div> Asli <i>f(x)</i></span>
+                            <span><div class="dot" style="background: #ef4444;"></div> Invers <i>f⁻¹(x)</i></span>
+                            <span><div class="dot" style="background: #94a3b8; border-radius: 0;"></div> Cermin (<i>y = x</i>)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: GAME 2 (PASANG FUNGSI - 3 PASANG PER LEVEL) -->
+            <div id="sub-game2" class="sub-tab-content">
+                <div class="game-container">
+                    <h3 style="color: var(--primary); margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">🎮 Mini Game: Pasangkan Fungsi Invers</h3>
+                    <p style="margin-bottom: 1rem;">Tarik kotak fungsi <i>f(x)</i> ke kotak target fungsi inversnya <i>f⁻¹(x)</i> yang tepat!</p>
+                    
+                    <div class="level-nav">
+                        <button class="level-btn active" id="btn-g2-l1" onclick="setGame2Level(1)">Level 1: Linear</button>
+                        <button class="level-btn" id="btn-g2-l2" onclick="setGame2Level(2)">Level 2: Pecahan</button>
+                        <button class="level-btn" id="btn-g2-l3" onclick="setGame2Level(3)">Level 3: Akar</button>
+                    </div>
+
+                    <div class="cards-wrapper" id="draggable-cards"></div>
+                    <div class="cards-wrapper" id="drop-zones"></div>
+                    <div class="game-message" id="game-message"></div>
+
+                    <div class="congrats-banner" id="congrats-banner">
+                        <h3 style="font-size: 1.3rem; margin-bottom: 0.3rem;">🎈 HORE! LUAR BIASA! 🎈</h3>
+                        <p id="congrats-text" style="font-size: 1rem; color: #fff; margin-bottom: 0;">Kamu berhasil menyelesaikan level ini dengan sempurna!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: GAME 3 (KRIPTOGRAFI - 5 LEVEL) -->
+            <div id="sub-game3" class="sub-tab-content">
+                <div class="crypto-container">
+                    <div class="crypto-header">🕵️‍♂️ Misi: Dekripsi Pesan <span id="crypto-level-indicator" style="font-size:0.6em; color:#fff;">(Level 1/5)</span></div>
+                    
+                    <div id="crypto-game-area">
+                        <div class="mission-text" id="crypto-mission-desc"></div>
+                        <div class="terminal-box" id="crypto-secret-code"></div>
+                        <div class="options-container" id="crypto-options"></div>
+                        <div id="crypto-status-msg" class="status-message">Menunggu otorisasi dekripsi...</div>
+                    </div>
+
+                    <div id="crypto-success-area" style="display:none; padding: 20px;">
+                        <div class="key-icon">🔑</div>
+                        <h2 style="color: #ffd700; margin-bottom: 10px; font-family:'Poppins', sans-serif;">KUNCI EMAS DIDAPATKAN!</h2>
+                        <p style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px;">Luar biasa, Agen! Kamu telah berhasil meretas kelima sistem menggunakan konsep Fungsi Invers.</p>
+                        <button class="btn-option" style="margin:0 auto; font-family: 'Outfit', sans-serif;" onclick="resetCryptoGame()">Mainkan Ulang Misi</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: GAME 4 (TIME MACHINE CHEF) -->
+            <div id="sub-game4" class="sub-tab-content">
+                <div class="chef-container">
+                    <h2 style="color: #38bdf8; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">🍳 Time Machine Chef: Resep Rahasia Suhu</h2>
+                    <p style="margin-bottom: 1.2rem; color: #cbd5e1;">Misi Kuliner Penjelajah Waktu: Oven ajaib membutuhkan suhu awal Celcius tertentu agar menghasilkan suhu resep Fahrenheit yang sempurna!</p>
+                    
+                    <div class="chef-screen">
+                        <p style="font-size: 1.1rem; color: #e2e8f0; margin-bottom: 5px;">Suhu Resep Tujuan (°F):</p>
+                        <div class="oven-display" id="chef-target-fahrenheit">-- °F</div>
+                        <p style="font-size: 1rem; color: #94a3b8; margin-top: 5px; font-family: 'Cambria Math', serif;" id="chef-formula-hint">
+                            Formula Oven: <i>F</i> = <span class="frac"><span class="top">9</span><span class="bot">5</span></span><i>C</i> + 32
+                        </p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                        <p style="font-weight: 600;">Hitung berapa suhu awal Celcius (°C) yang harus diatur pada mesin waktu:</p>
+                        <div style="display: flex; gap: 10px; align-items: center; justify-content: center;">
+                            <input type="number" id="chefUserAnswer" class="chef-input" placeholder="°C">
+                            <button class="btn-primary" onclick="checkChefAnswer()">Setel Oven 🚀</button>
+                        </div>
+                        <p id="chefStatusMsg" style="font-weight: bold; min-height: 25px; margin-top: 5px; font-size: 1.05rem;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-TAB: GAME 5 (KARTU SOAL KONTEKSTUAL SUHU) -->
+            <div id="sub-game5" class="sub-tab-content">
+                <div class="card" style="background: var(--card-bg);">
+                    <h2 style="color: var(--primary); text-align: center; margin-bottom: 0.5rem;">🌡️ Flashcard Kartu Soal Kontekstual Suhu</h2>
+                    <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+                        Pilih dan klik salah satu gambar kartu soal suhu di bawah ini untuk membuka dan menyelesaikan tantangan fungsi inversnya!
+                    </p>
+
+                    <div class="temp-deck">
+                        <div class="temp-card-item" onclick="openTempCard(1)">
+                            <h3>🃏 Kartu #1</h3><p>Konversi Celcius ke Fahrenheit</p>
+                        </div>
+                        <div class="temp-card-item" onclick="openTempCard(2)">
+                            <h3>🃏 Kartu #2</h3><p>Target Suhu Laboratorium</p>
+                        </div>
+                        <div class="temp-card-item" onclick="openTempCard(3)">
+                            <h3>🃏 Kartu #3</h3><p>Suhu Reamur ke Celcius</p>
+                        </div>
+                        <div class="temp-card-item" onclick="openTempCard(4)">
+                            <h3>🃏 Kartu #4</h3><p>Mesin Pendingin Ruangan</p>
+                        </div>
+                        <div class="temp-card-item" onclick="openTempCard(5)">
+                            <h3>🃏 Kartu #5</h3><p>Suhu Termometer Skala Khusus</p>
+                        </div>
+                    </div>
+
+                    <div id="temp-active-container" style="display: none; background: #f8fafc; border: 2px solid var(--primary); border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem;">
+                        <h3 id="temp-card-title" style="color: var(--primary); margin-bottom: 0.75rem;"></h3>
+                        <div class="math-box" id="temp-question-text" style="background: #fff; line-height: 1.8;"></div>
+                        
+                        <div class="control-group" style="margin-top: 1rem;">
+                            <label>Ketik Hasil Perhitungan Akhirmu:</label>
+                            <input type="text" id="tempUserAnswer" class="chef-input" style="width: 100%; max-width: 300px; text-align: left;" placeholder="Contoh: 25">
+                            <button class="btn-primary" style="margin-top: 0.75rem;" onclick="checkTempAnswer()">Periksa Jawaban 🔍</button>
+                        </div>
+
+                        <div id="temp-feedback" style="margin-top: 1rem; font-weight: bold; font-size: 1.05rem;"></div>
+
+                        <div id="temp-discussion-box" style="display: none; margin-top: 1rem; background: #e0f2fe; border-left: 5px solid var(--primary); padding: 1.2rem; border-radius: 0.5rem;">
+                            <h4 style="color: var(--primary); margin-bottom: 0.8rem; font-family: 'Poppins', sans-serif;">📖 Pembahasan & Penulisan Matematika:</h4>
+                            <div id="temp-discussion-text" style="line-height: 1.8; color: var(--text-main); font-family: 'Cambria Math', serif; font-size: 1.1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- TAB 5: EVALUASI -->
+        <section id="tab-evaluasi" class="tab-content">
+            <div class="card">
+                <h2>📝 Latihan Evaluasi</h2>
+                <form id="evalForm" onsubmit="submitWithoutOpeningTab(event)" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div class="control-group">
+                        <label>Nama Lengkap:</label>
+                        <input type="text" id="inputNama" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; font-size:1rem;" placeholder="Tulis namamu...">
+                    </div>
+                    <div class="control-group">
+                        <label>Kelas:</label>
+                        <input type="text" id="inputKelas" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; font-size:1rem;" placeholder="Tulis kelasmu...">
+                    </div>
+                    <div class="control-group">
+                        <label>Asal Sekolah:</label>
+                        <input type="text" id="inputSekolah" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; font-size:1rem;" placeholder="Tulis asal sekolahmu...">
+                    </div>
+                    <div class="control-group">
+                        <label>Soal 1: Tentukan invers dari fungsi <i>f(x)</i> = 5<i>x</i> + 10 !</label>
+                        <textarea id="inputSoal1" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; min-height:80px;" placeholder="Tulis penyelesaianmu di sini..."></textarea>
+                    </div>
+                    <div class="control-group">
+                        <label>Soal 2: Diketahui <i>f(x)</i> = 4<i>x</i> - 2. Tentukan nilai dari <i>f⁻¹(10)</i> ! <i>(Opsional: Unggah foto coretan)</i></label>
+                        <input type="file" id="inputSoal2File" accept="image/*" style="padding: 0.5rem; border: 1px solid var(--border); border-radius: 0.5rem; background: #fff; cursor: pointer;">
+                        <textarea id="inputSoal2" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; min-height:80px; margin-top: 0.5rem;" placeholder="Tulis penjelasan..."></textarea>
+                    </div>
+                    <div class="control-group">
+                        <label>Soal 3: Mengapa grafik fungsi dan inversnya tampak seperti bercermin?</label>
+                        <textarea id="inputSoal3" required style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.5rem; min-height:80px;" placeholder="Tulis penjelasannya..."></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn" class="btn-primary" style="align-self: flex-start;">Kirim Jawaban</button>
+                    <p id="submitStatus" style="font-weight: 600; margin-top: 0.5rem;"></p>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 6: PROFIL PEMBUAT -->
+        <section id="tab-profil" class="tab-content">
+            <div class="card">
+                <h2>👩‍💻 Profil Pembuat</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    Platform pembelajaran interaktif <strong>Mathesis Labs - Fungsi Invers</strong> ini dikembangkan dengan dedikasi penuh untuk membantu proses belajar matematika kelas XI secara mandiri dan menyenangkan.
+                </p>
+                <div class="grid-2">
+                    <div class="feature-box" style="text-align: center;">
+                        <!-- FOTO PROFIL PUTRI ANJANI -->
+                        <div style="margin-bottom: 0.8rem; display: flex; justify-content: center;">
+                            <img src="putri.jpg" alt="Putri Anjani" style="width: 120px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        </div>
+                        <h3 style="color: var(--primary); margin-bottom: 0.3rem;">Putri Anjani</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.2rem;">Mahasiswa Magister Pendidikan Matematika</p>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Universitas Negeri Semarang</p>
+                    </div>
+                    <div class="feature-box" style="text-align: center;">
+                        <!-- FOTO PROFIL ANGGUN -->
+                        <div style="margin-bottom: 0.8rem; display: flex; justify-content: center;">
+                            <img src="anggun.jpg" alt="Anggun F. Anggraeni" style="width: 120px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        </div>
+                        <h3 style="color: var(--primary); margin-bottom: 0.3rem;">Anggun F. Anggraeni</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.2rem;">Mahasiswa Magister Pendidikan Matematika</p>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">Universitas Negeri Semarang</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Mathesis Labs • Created by: <span>Putri Anjani R. & Anggun F. Anggraeni.</span></p>
+    </footer>
+
+    <script>
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+
+        // SKRIP TOMBOL BACK TO TOP
+        const backToTopBtn = document.getElementById("backToTopBtn");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        };
+        backToTopBtn.onclick = function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        };
+
+        // LOGIKA SUBMIT FORM EVALUASI
+        function submitWithoutOpeningTab(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('submitStatus');
+            btn.disabled = true;
+            btn.textContent = "Mengirim...";
+            status.textContent = "";
+
+            const fileInput = document.getElementById('inputSoal2File');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    sendDataToSheet(e.target.result.split(',')[1], fileInput.files[0].name);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                sendDataToSheet("", "");
+            }
+        }
+
+        function sendDataToSheet(fileBase64, fileName) {
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('submitStatus');
+            const formData = new URLSearchParams();
+            formData.append("nama", document.getElementById('inputNama').value);
+            formData.append("kelas", document.getElementById('inputKelas').value);
+            formData.append("sekolah", document.getElementById('inputSekolah').value);
+            formData.append("soal1", document.getElementById('inputSoal1').value);
+            formData.append("soal2", document.getElementById('inputSoal2').value);
+            formData.append("soal2_file", fileBase64);
+            formData.append("soal2_filename", fileName);
+            formData.append("soal3", document.getElementById('inputSoal3').value);
+
+            const scriptURL = "https://script.google.com/macros/s/AKfycbyA20XrsSeSqJJs58VQ4If35-DtK9RwsuLsOFKlTFQaP7NK9AIzsfx0YBmm-LZWjZ8j9g/exec";
+
+            fetch(scriptURL, { method: "POST", mode: "no-cors", body: formData }).then(() => {
+                btn.textContent = "Berhasil Terkirim! ✅";
+                status.style.color = "var(--success)";
+                status.textContent = "Terima kasih! Jawaban berhasil direkam ke Google Sheets.";
+                
+                var end = Date.now() + 3000;
+                (function frame() {
+                    myConfetti({ particleCount: 7, angle: 60, spread: 70, origin: { x: 0, y: 0.8 } });
+                    myConfetti({ particleCount: 7, angle: 120, spread: 70, origin: { x: 1, y: 0.8 } });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+
+                setTimeout(() => {
+                    document.getElementById('evalForm').reset();
+                    btn.disabled = false;
+                    btn.textContent = "Kirim Jawaban";
+                    status.textContent = "";
+                }, 4000);
+            }).catch(() => {
+                btn.disabled = false;
+                btn.textContent = "Kirim Jawaban";
+                status.style.color = "var(--danger)";
+                status.textContent = "Gagal mengirim. Periksa koneksi Anda.";
+            });
+        }
+
+        // LOGIKA NAVIGASI TAB UTAMA
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            // FIX: Paksa render Mermaid jika tab Peta Konsep dibuka
+            if (tabId === 'petakonsep') {
+                const mermaidDiv = document.getElementById('conceptMapMermaid');
+                if (mermaidDiv && !mermaidDiv.getAttribute('data-processed')) {
+                    mermaid.init(undefined, mermaidDiv);
+                }
+            }
+        }
+
+        // LOGIKA NAVIGASI SUB-TAB SIMULATOR
+        function switchSubTab(subTabId, btn) {
+            document.querySelectorAll('.sub-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sub-nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('sub-' + subTabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+            if (subTabId === 'game4') initChefGame();
+        }
+
+        // LOGIKA QUICK CHECK (TAB MATERI)
+        function checkQuickCheck(isCorrect, btn) {
+            const feedback = document.getElementById('qc-feedback');
+            document.querySelectorAll('#qc-buttons .btn-option').forEach(b => {
+                b.style.borderColor = 'var(--border)';
+                b.style.backgroundColor = '#fff';
+            });
+            if(isCorrect) {
+                btn.style.borderColor = 'var(--success)';
+                btn.style.backgroundColor = '#d1fae5';
+                feedback.style.color = 'var(--success)';
+                feedback.innerHTML = '✅ Benar sekali! Langkahnya: y = 2x + 4 → 2x = y - 4 → x = (y - 4) / 2.';
+            } else {
+                btn.style.borderColor = 'var(--danger)';
+                btn.style.backgroundColor = '#fee2e2';
+                feedback.style.color = 'var(--danger)';
+                feedback.innerHTML = '❌ Masih kurang tepat. Coba ingat: pindah ruas dulu konstanta (+4), baru bagi dengan koefisien (2).';
+            }
+        }
+
+        // GAME 1: SIMULATOR GRAFIK
+        let currentFuncMode = 'linear';
+        function setFuncMode(mode) {
+            currentFuncMode = mode;
+            document.querySelectorAll('.func-mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-mode-' + mode).classList.add('active');
+            document.getElementById('controls-linear').style.display = (mode === 'linear') ? 'block' : 'none';
+            document.getElementById('controls-rational').style.display = (mode === 'rational') ? 'block' : 'none';
+            document.getElementById('controls-sqrt').style.display = (mode === 'sqrt') ? 'block' : 'none';
+            drawGraph();
+        }
+
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const sliderM = document.getElementById('slider-m'), sliderC = document.getElementById('slider-c');
+        const sliderRa = document.getElementById('slider-ra'), sliderRb = document.getElementById('slider-rb'), sliderRc = document.getElementById('slider-rc'), sliderRd = document.getElementById('slider-rd');
+        const sliderSa = document.getElementById('slider-sa'), sliderSb = document.getElementById('slider-sb'), sliderSc = document.getElementById('slider-sc');
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, scale = 25; 
+
+            ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
+            for(let i = 0; i <= w; i += scale) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke(); 
+
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+            ctx.beginPath(); ctx.moveTo(0, h); ctx.lineTo(w, 0); ctx.stroke(); ctx.setLineDash([]); 
+
+            function plotCurve(fn, color, skipCondition = null) {
+                ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.beginPath();
+                let drawing = false;
+                for(let px = 0; px <= w; px++) {
+                    let x = (px - cx) / scale;
+                    if (skipCondition && skipCondition(x)) { drawing = false; continue; }
+                    let y = fn(x);
+                    if (isNaN(y) || !isFinite(y)) { drawing = false; continue; }
+                    let py = cy - y * scale;
+                    if (py < -100 || py > h + 100) { drawing = false; continue; }
+                    if(!drawing) { ctx.moveTo(px, py); drawing = true; } else { ctx.lineTo(px, py); }
+                }
+                ctx.stroke();
+            }
+
+            if (currentFuncMode === 'linear') {
+                let m = parseFloat(sliderM.value) || 0.1;
+                let c = parseFloat(sliderC.value);
+                document.getElementById('val-m').textContent = m;
+                document.getElementById('val-c').textContent = c;
+                document.getElementById('eq-f').innerHTML = `<i>f(x)</i> = ${m}<i>x</i> ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)}`;
+                document.getElementById('eq-inv').innerHTML = `<i>f⁻¹(x)</i> = <span class="frac"><span class="top"><i>x</i> ${c >= 0 ? '- ' + c : '+ ' + Math.abs(c)}</span><span class="bot">${m}</span></span>`;
+                plotCurve((x) => m * x + c, '#0369a1');
+                plotCurve((x) => (x - c) / m, '#ef4444');
+            } else if (currentFuncMode === 'rational') {
+                let a = parseFloat(sliderRa.value), b = parseFloat(sliderRb.value), c = parseFloat(sliderRc.value) || 1, d = parseFloat(sliderRd.value);
+                document.getElementById('val-ra').textContent = a; document.getElementById('val-rb').textContent = b;
+                document.getElementById('val-rc').textContent = c; document.getElementById('val-rd').textContent = d;
+                document.getElementById('eq-f').innerHTML = `<i>f(x)</i> = <span class="frac"><span class="top">${a}<i>x</i> ${b>=0?'+ '+b:'- '+Math.abs(b)}</span><span class="bot">${c}<i>x</i> ${d>=0?'+ '+d:'- '+Math.abs(d)}</span></span>`;
+                
+                let numXDisplay = (-d >= 0) ? (-d === 1 ? '<i>x</i>' : -d + '<i>x</i>') : '-' + Math.abs(-d) + '<i>x</i>';
+                if (-d === 0) numXDisplay = '';
+
+                let numConstSign = (b >= 0) ? '+ ' + b : '- ' + Math.abs(b);
+                let numFinalStr = (numXDisplay === '' && b === 0) ? '0' : (numXDisplay === '' ? b : numXDisplay + ' ' + numConstSign);
+
+                let denomConstVal = -a;
+                let denomConstSign = (denomConstVal >= 0) ? '+ ' + denomConstVal : '- ' + Math.abs(denomConstVal);
+                let denomFinalStr = (c === 1 ? '<i>x</i>' : c + '<i>x</i>') + ' ' + denomConstSign;
+
+                document.getElementById('eq-inv').innerHTML = `<i>f⁻¹(x)</i> = <span class="frac"><span class="top">${numFinalStr}</span><span class="bot">${denomFinalStr}</span></span>`;
+
+                plotCurve((x) => (a * x + b) / (c * x + d), '#0369a1', (x) => Math.abs(x + d/c) < 0.08);
+                plotCurve((x) => (-d * x + b) / (c * x - a), '#ef4444', (x) => Math.abs(x - a/c) < 0.08);
+            } else if (currentFuncMode === 'sqrt') {
+                let a = parseFloat(sliderSa.value), b = parseFloat(sliderSb.value), c = parseFloat(sliderSc.value);
+                document.getElementById('val-sa').textContent = a; document.getElementById('val-sb').textContent = b; document.getElementById('val-sc').textContent = c;
+                document.getElementById('eq-f').innerHTML = `<i>f(x)</i> = √(${a}<i>x</i> ${b>=0?'+ '+b:'- '+Math.abs(b)}) ${c>=0?'+ '+c:'- '+Math.abs(c)}`;
+                document.getElementById('eq-inv').innerHTML = `<i>f⁻¹(x)</i> = <span class="frac"><span class="top">(<i>x</i> ${-c>=0?'+ '+(-c):'- '+Math.abs(-c)})² ${b>=0?'- '+b:'+ '+Math.abs(b)}</span><span class="bot">${a}</span></span>`;
+                plotCurve((x) => Math.sqrt(a * x + b) + c, '#0369a1', (x) => x < -b/a);
+                plotCurve((x) => (Math.pow(x - c, 2) - b) / a, '#ef4444', (x) => x < c);
+            }
+        }
+        [sliderM, sliderC, sliderRa, sliderRb, sliderRc, sliderRd, sliderSa, sliderSb, sliderSc].forEach(s => s.addEventListener('input', drawGraph));
+        drawGraph();
+
+        // GAME 2: PASANG FUNGSI (3 PASANG PER LEVEL)
+        const game2Levels = {
+            1: {
+                title: "Level 1: Linear",
+                cards: [
+                    { id: "1a", fx: "<i>f(x)</i> = 2<i>x</i> - 6", target: "1a_inv" }, 
+                    { id: "1b", fx: "<i>f(x)</i> = 3<i>x</i> + 9", target: "1b_inv" },
+                    { id: "1c", fx: "<i>f(x)</i> = -4<i>x</i> + 8", target: "1c_inv" }
+                ],
+                zones: [
+                    { id: "1a_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> + 6</span><span class='bot'>2</span></span>", match: "1a" }, 
+                    { id: "1b_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 9</span><span class='bot'>3</span></span>", match: "1b" },
+                    { id: "1c_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'>8 - <i>x</i></span><span class='bot'>4</span></span>", match: "1c" }
+                ]
+            },
+            2: {
+                title: "Level 2: Pecahan",
+                cards: [
+                    { id: "2a", fx: "<i>f(x)</i> = <span class='frac'><span class='top'><i>x</i> + 3</span><span class='bot'><i>x</i> - 2</span></span>", target: "2a_inv" },
+                    { id: "2b", fx: "<i>f(x)</i> = <span class='frac'><span class='top'>2<i>x</i> - 5</span><span class='bot'>3<i>x</i> + 1</span></span>", target: "2b_inv" },
+                    { id: "2c", fx: "<i>f(x)</i> = <span class='frac'><span class='top'>4<i>x</i> + 1</span><span class='bot'><i>x</i> - 3</span></span>", target: "2c_inv" }
+                ],
+                zones: [
+                    { id: "2a_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'>2<i>x</i> + 3</span><span class='bot'><i>x</i> - 1</span></span>", match: "2a" },
+                    { id: "2b_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'>-<i>x</i> - 5</span><span class='bot'>3<i>x</i> - 2</span></span>", match: "2b" },
+                    { id: "2c_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'>3<i>x</i> + 1</span><span class='bot'><i>x</i> - 4</span></span>", match: "2c" }
+                ]
+            },
+            3: {
+                title: "Level 3: Akar & Kuadrat",
+                cards: [
+                    { id: "3a", fx: "<i>f(x)</i> = √(<i>x</i> - 3)", target: "3a_inv" },
+                    { id: "3b", fx: "<i>f(x)</i> = <i>x</i>² - 5", target: "3b_inv" },
+                    { id: "3c", fx: "<i>f(x)</i> = √(2<i>x</i> + 4)", target: "3c_inv" }
+                ],
+                zones: [
+                    { id: "3a_inv", inv: "<i>f⁻¹(x)</i> = <i>x</i>² + 3", match: "3a" },
+                    { id: "3b_inv", inv: "<i>f⁻¹(x)</i> = √(<i>x</i> + 5)", match: "3b" },
+                    { id: "3c_inv", inv: "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i>² - 4</span><span class='bot'>2</span></span>", match: "3c" }
+                ]
+            }
+        };
+
+        let currentG2Level = 1, matchedCount = 0;
+        function setGame2Level(lvl) {
+            currentG2Level = lvl; matchedCount = 0;
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-g2-l${lvl}`).classList.add('active');
+            document.getElementById('congrats-banner').style.display = 'none';
+
+            const data = game2Levels[lvl];
+            const cardsWrap = document.getElementById('draggable-cards'), zonesWrap = document.getElementById('drop-zones');
+            cardsWrap.innerHTML = ""; zonesWrap.innerHTML = ""; document.getElementById('game-message').innerText = "";
+
+            data.cards.forEach(c => {
+                let div = document.createElement('div');
+                div.className = 'drag-card'; div.setAttribute('draggable', 'true'); div.setAttribute('data-id', c.id); div.innerHTML = c.fx;
+                div.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', c.id));
+                cardsWrap.appendChild(div);
+            });
+
+            // Acak posisi zona target agar menantang
+            let shuffledZones = data.zones.sort(() => Math.random() - 0.5);
+            shuffledZones.forEach(z => {
+                let div = document.createElement('div');
+                div.className = 'drop-zone'; div.setAttribute('data-target', z.match); div.innerHTML = z.inv;
+                div.addEventListener('dragover', (e) => e.preventDefault());
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.getData('text/plain') === z.match) {
+                        let card = document.querySelector(`.drag-card[data-id="${z.match}"]`);
+                        div.appendChild(card); card.style.width = '100%'; card.style.height = '100%'; card.setAttribute('draggable', 'false');
+                        div.classList.add('correct'); matchedCount++;
+                        if (matchedCount === data.cards.length) {
+                            document.getElementById('congrats-banner').style.display = 'block';
+                            myConfetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+                        }
+                    } else {
+                        document.getElementById('game-message').innerText = "❌ Belum tepat, fungsi invers tidak cocok!";
+                        setTimeout(() => document.getElementById('game-message').innerText = "", 2000);
+                    }
+                });
+                zonesWrap.appendChild(div);
+            });
+        }
+        setGame2Level(1);
+
+        // GAME 3: KRIPTOGRAFI (5 LEVEL)
+        const cryptoLevels = [
+            { fx: "<i>x</i> + 3", encrypted: [5, 24, 14, 4], options: ["<i>f⁻¹(x)</i> = <i>x</i> - 3", "<i>f⁻¹(x)</i> = <i>x</i> + 3"], correctIndex: 0, inv: (x) => x - 3 },
+            { fx: "2<i>x</i>", encrypted: [22, 30, 8, 10], options: ["<i>f⁻¹(x)</i> = <i>x</i> + 2", "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i></span><span class='bot'>2</span></span>"], correctIndex: 1, inv: (x) => x / 2 },
+            { fx: "3<i>x</i> - 2", encrypted: [55, 1, 40, 10, 25], options: ["<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> + 2</span><span class='bot'>3</span></span>", "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 2</span><span class='bot'>3</span></span>"], correctIndex: 0, inv: (x) => (x + 2) / 3 },
+            { fx: "5<i>x</i> + 1", encrypted: [6, 36, 26, 71], options: ["<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 1</span><span class='bot'>5</span></span>", "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> + 1</span><span class='bot'>5</span></span>"], correctIndex: 0, inv: (x) => (x - 1) / 5 },
+            { fx: "4<i>x</i> - 5", encrypted: [67, -1, 27, -1, 71, 31, -1], options: ["<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 5</span><span class='bot'>4</span></span>", "<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> + 5</span><span class='bot'>4</span></span>"], correctIndex: 1, inv: (x) => (x + 5) / 4 }
+        ];
+        let currentCryptoLevel = 0;
+        function loadCryptoLevel() {
+            if (currentCryptoLevel >= cryptoLevels.length) {
+                document.getElementById('crypto-game-area').style.display = 'none';
+                document.getElementById('crypto-success-area').style.display = 'block';
+                return;
+            }
+            const lvl = cryptoLevels[currentCryptoLevel];
+            document.getElementById('crypto-level-indicator').innerText = `(Level ${currentCryptoLevel + 1}/5)`;
+            document.getElementById('crypto-mission-desc').innerHTML = `Dekripsi pesan dengan fungsi <b><i>f(x)</i> = ${lvl.fx}</b>!`;
+            
+            const codeBox = document.getElementById('crypto-secret-code');
+            codeBox.innerHTML = '';
+            lvl.encrypted.forEach(n => {
+                let span = document.createElement('span'); span.className = 'letter-box'; span.innerText = n; span.setAttribute('data-val', n);
+                codeBox.appendChild(span);
+            });
+
+            const optBox = document.getElementById('crypto-options');
+            optBox.innerHTML = '';
+            lvl.options.forEach((opt, idx) => {
+                let btn = document.createElement('button'); btn.className = 'btn-option'; btn.innerHTML = opt;
+                btn.onclick = () => {
+                    if (idx === lvl.correctIndex) {
+                        document.querySelectorAll('.letter-box').forEach(box => {
+                            let val = parseFloat(box.getAttribute('data-val'));
+                            box.innerText = String.fromCharCode(lvl.inv(val) + 64);
+                        });
+                        document.getElementById('crypto-status-msg').style.color = "#4caf50";
+                        document.getElementById('crypto-status-msg').textContent = "✅ Berhasil! Mengakses level berikutnya...";
+                        setTimeout(() => { currentCryptoLevel++; loadCryptoLevel(); }, 2000);
+                    } else {
+                        document.getElementById('crypto-status-msg').style.color = "#ff4c4c";
+                        document.getElementById('crypto-status-msg').innerHTML = "❌ Akses Ditolak: Rumus invers salah!";
+                    }
+                };
+                optBox.appendChild(btn);
+            });
+            document.getElementById('crypto-status-msg').style.color = "#fff";
+            document.getElementById('crypto-status-msg').textContent = "Menunggu otorisasi dekripsi...";
+        }
+        function resetCryptoGame() { currentCryptoLevel = 0; document.getElementById('crypto-game-area').style.display = 'block'; document.getElementById('crypto-success-area').style.display = 'none'; loadCryptoLevel(); }
+        loadCryptoLevel();
+
+        // GAME 4: TIME MACHINE CHEF
+        let chefTargetF = 0, chefCorrectC = 0;
+        function initChefGame() {
+            chefCorrectC = Math.floor(Math.random() * 80) + 10; 
+            chefTargetF = Math.round((9/5) * chefCorrectC + 32);
+            document.getElementById('chef-target-fahrenheit').innerText = `${chefTargetF} °F`;
+            document.getElementById('chefUserAnswer').value = '';
+            document.getElementById('chefStatusMsg').innerText = '';
+        }
+
+        function checkChefAnswer() {
+            let userVal = document.getElementById('chefUserAnswer').value;
+            let msg = document.getElementById('chefStatusMsg');
+            
+            if(userVal.trim() === '') {
+                msg.style.color = "var(--danger)";
+                msg.innerHTML = `❌ Suhu belum dimasukkan! Silakan isi dulu.`;
+                return;
+            }
+
+            if (parseFloat(userVal) === chefCorrectC) {
+                msg.style.color = "var(--success)";
+                msg.textContent = "🎉 SUHU PAS! Oven penjelajah waktu berhasil aktif dengan sempurna!";
+                myConfetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+                setTimeout(initChefGame, 3000);
+            } else {
+                msg.style.color = "var(--danger)";
+                msg.innerHTML = `❌ Belum tepat! Gunakan fungsi invers: <i>f⁻¹(F)</i> = <span class="frac"><span class="top">5</span><span class="bot">9</span></span>(<i>F</i> - 32)`;
+            }
+        }
+        initChefGame();
+
+        // GAME 5: KARTU SOAL KONTEKSTUAL SUHU (LOGIKA BENAR & MATEMATIKA FORMAL)
+        const tempCardsData = {
+            1: {
+                title: "Kartu Soal Suhu #1 (Konversi Celcius ke Fahrenheit)",
+                question: "Diketahui fungsi konversi suhu dari Celcius ke Fahrenheit adalah <i>f(C)</i> = <span class='frac'><span class='top'>9</span><span class='bot'>5</span></span><i>C</i> + 32. Jika suhu terbaca adalah 77°F, tentukan suhu awal dalam Celcius (°C) menggunakan konsep fungsi invers!",
+                answerKeys: ["25"],
+                discussion: "1. Misalkan <i>f(C)</i> = <i>y</i>, sehingga persamaannya menjadi: <i>y</i> = <span class='frac'><span class='top'>9</span><span class='bot'>5</span></span><i>C</i> + 32.<br>2. Lakukan manipulasi aljabar untuk menyatakan <i>C</i> dalam bentuk <i>y</i>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>y</i> - 32 = <span class='frac'><span class='top'>9</span><span class='bot'>5</span></span><i>C</i><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>C</i> = <span class='frac'><span class='top'>5</span><span class='bot'>9</span></span>(<i>y</i> - 32).<br>3. Nyatakan dalam fungsi invers: <i>f⁻¹(F)</i> = <span class='frac'><span class='top'>5</span><span class='bot'>9</span></span>(<i>F</i> - 32).<br>4. Substitusi nilai <i>F</i> = 77:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(77)</i> = <span class='frac'><span class='top'>5</span><span class='bot'>9</span></span>(77 - 32)<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(77)</i> = <span class='frac'><span class='top'>5</span><span class='bot'>9</span></span>(45) = <b>25°C</b>."
+            },
+            2: {
+                title: "Kartu Soal Suhu #2 (Target Suhu Laboratorium)",
+                question: "Dalam suatu eksperimen laboratorium, fungsi pengaturan suhu reaktor adalah <i>f(x)</i> = 2<i>x</i> + 15. Jika target suhu akhir yang diinginkan bernilai 55, tentukan nilai input awal <i>x</i> menggunakan fungsi invers!",
+                answerKeys: ["20"],
+                discussion: "1. Diketahui fungsi: <i>f(x)</i> = 2<i>x</i> + 15.<br>2. Menentukan rumus fungsi invers <i>f⁻¹(x)</i>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>y</i> = 2<i>x</i> + 15<br>&nbsp;&nbsp;&nbsp;&nbsp;2<i>x</i> = <i>y</i> - 15<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>x</i> = <span class='frac'><span class='top'><i>y</i> - 15</span><span class='bot'>2</span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 15</span><span class='bot'>2</span></span>.<br>3. Substitusi nilai <i>x</i> = 55:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(55)</i> = <span class='frac'><span class='top'>55 - 15</span><span class='bot'>2</span></span> = <span class='frac'><span class='top'>40</span><span class='bot'>2</span></span> = <b>20</b>."
+            },
+            3: {
+                title: "Kartu Soal Suhu #3 (Konversi Reamur ke Celcius)",
+                question: "Suhu Reamur dikonversi ke Celcius menggunakan fungsi <i>f(R)</i> = <span class='frac'><span class='top'>5</span><span class='bot'>4</span></span><i>R</i>. Jika termometer Celcius menunjukkan angka 45°C, tentukan besar suhu Reamur (<i>R</i>) mula-mula!",
+                answerKeys: ["36"],
+                discussion: "1. Diketahui fungsi: <i>f(R)</i> = <span class='frac'><span class='top'>5</span><span class='bot'>4</span></span><i>R</i>.<br>2. Menentukan fungsi invers <i>f⁻¹(C)</i>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>C</i> = <span class='frac'><span class='top'>5</span><span class='bot'>4</span></span><i>R</i><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>R</i> = <span class='frac'><span class='top'>4</span><span class='bot'>5</span></span><i>C</i><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(C)</i> = <span class='frac'><span class='top'>4</span><span class='bot'>5</span></span><i>C</i>.<br>3. Substitusi nilai <i>C</i> = 45:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(45)</i> = <span class='frac'><span class='top'>4</span><span class='bot'>5</span></span>(45) = 4 × 9 = <b>36°R</b>."
+            },
+            4: {
+                title: "Kartu Soal Suhu #4 (Mesin Pendingin Ruangan / AC)",
+                question: "Pengaturan suhu sebuah mesin pendingin dirumuskan sebagai <i>f(x)</i> = 3<i>x</i> - 10. Apabila suhu aktual yang terukur di dalam ruangan adalah 35, tentukan setelan awal <i>x</i> pada mesin tersebut!",
+                answerKeys: ["15"],
+                discussion: "1. Diketahui fungsi: <i>f(x)</i> = 3<i>x</i> - 10.<br>2. Menentukan fungsi invers <i>f⁻¹(x)</i>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>y</i> = 3<i>x</i> - 10<br>&nbsp;&nbsp;&nbsp;&nbsp;3<i>x</i> = <i>y</i> + 10<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>x</i> = <span class='frac'><span class='top'><i>y</i> + 10</span><span class='bot'>3</span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> + 10</span><span class='bot'>3</span></span>.<br>3. Substitusi nilai <i>x</i> = 35:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(35)</i> = <span class='frac'><span class='top'>35 + 10</span><span class='bot'>3</span></span> = <span class='frac'><span class='top'>45</span><span class='bot'>3</span></span> = <b>15</b>."
+            },
+            5: {
+                title: "Kartu Soal Suhu #5 (Termometer Skala Khusus)",
+                question: "Suatu alat ukur termometer khusus menggunakan fungsi konversi <i>f(x)</i> = 4<i>x</i> + 20. Jika pembacaan skala akhir menunjukkan angka 100, berapakah nilai input awal <i>x</i> dengan menggunakan invers fungsi?",
+                answerKeys: ["20"],
+                discussion: "1. Diketahui fungsi: <i>f(x)</i> = 4<i>x</i> + 20.<br>2. Menentukan fungsi invers <i>f⁻¹(x)</i>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>y</i> = 4<i>x</i> + 20<br>&nbsp;&nbsp;&nbsp;&nbsp;4<i>x</i> = <i>y</i> - 20<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>x</i> = <span class='frac'><span class='top'><i>y</i> - 20</span><span class='bot'>4</span></span><br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(x)</i> = <span class='frac'><span class='top'><i>x</i> - 20</span><span class='bot'>4</span></span>.<br>3. Substitusi nilai <i>x</i> = 100:<br>&nbsp;&nbsp;&nbsp;&nbsp;<i>f⁻¹(100)</i> = <span class='frac'><span class='top'>100 - 20</span><span class='bot'>4</span></span> = <span class='frac'><span class='top'>80</span><span class='bot'>4</span></span> = <b>20</b>."
+            }
+        };
+
+        let activeTempCardId = null;
+        function openTempCard(id) {
+            activeTempCardId = id;
+            const card = tempCardsData[id];
+            document.getElementById('temp-active-container').style.display = 'block';
+            document.getElementById('temp-card-title').innerText = card.title;
+            document.getElementById('temp-question-text').innerHTML = card.question;
+            document.getElementById('tempUserAnswer').value = '';
+            document.getElementById('temp-feedback').innerHTML = '';
+            document.getElementById('temp-discussion-box').style.display = 'none';
+        }
+
+        function checkTempAnswer() {
+            if (!activeTempCardId) return;
+            const userIn = document.getElementById('tempUserAnswer').value.replace(/\s+/g, '').toLowerCase();
+            const card = tempCardsData[activeTempCardId];
+            const feedback = document.getElementById('temp-feedback');
+            const discBox = document.getElementById('temp-discussion-box');
+            
+            document.getElementById('temp-discussion-text').innerHTML = card.discussion;
+
+            // FIX: Validasi Kolom Kosong Dulu
+            if (userIn.length === 0) {
+                feedback.style.color = "var(--danger)";
+                feedback.innerHTML = "❌ Kolom jawaban masih kosong. Silakan ketik hasilmu terlebih dahulu!";
+                discBox.style.display = 'none';
+                return;
+            }
+
+            // FIX: Validasi Kecocokan (Strict)
+            let isCorrect = card.answerKeys.some(key => key.replace(/\s+/g, '').toLowerCase() === userIn);
+            
+            discBox.style.display = 'block'; // Tampilkan pembahasan
+
+            if (isCorrect) {
+                feedback.style.color = "var(--success)";
+                feedback.innerHTML = "✅ Jawaban Tepat! Luar biasa, silakan pelajari langkah-langkah di bawah.";
+            } else {
+                feedback.style.color = "var(--danger)";
+                feedback.innerHTML = "❌ Jawaban Belum Tepat. Perhatikan penjelasan aljabar di bawah ini dan coba lagi!";
+            }
+        }
+    </script>
+</body>
+</html>
